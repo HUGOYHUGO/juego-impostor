@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Juego del Impostor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #141e30, #243b55);
+    color: white;
+    text-align: center;
+}
+
+.container {
+    max-width: 420px;
+    margin: auto;
+    padding: 20px;
+}
+
+.card {
+    background: rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.4);
+}
+
+input, button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    font-size: 16px;
+    border-radius: 12px;
+    border: none;
+}
+
+input {
+    background: #eee;
+}
+
+button {
+    background: #ff4757;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #ff6b81;
+}
+
+.rol {
+    font-size: 26px;
+    margin: 20px 0;
+    white-space: pre-line;
+}
+
+.oculto {
+    display: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🕵️ Juego del Impostor</h1>
+
+<div id="configuracion" class="card">
+    <input type="number" id="jugadores" value="4" min="3" max="20" placeholder="Jugadores">
+    <input type="number" id="impostores" value="1" min="1" max="5" placeholder="Impostores">
+    <label>
+        <input type="checkbox" id="pistaImpostor" checked>
+        Mostrar categoría al impostor
+    </label>
+    <button onclick="crearJugadores()">➡️ Siguiente</button>
+</div>
+
+<div id="nombres" class="card oculto">
+    <h3>Nombres de los jugadores</h3>
+    <div id="inputsNombres"></div>
+    <button onclick="iniciarJuego()">🎲 Iniciar Juego</button>
+</div>
+
+<div id="juego" class="card oculto">
+    <h2 id="turno"></h2>
+    <div class="rol" id="rol">Pulsa ver rol</div>
+    <button onclick="verRol()">👁 Ver Rol</button>
+    <button onclick="siguiente()">➡️ Siguiente</button>
+</div>
+
+<div id="final" class="card oculto">
+    <h3>🗣️ Turno para hablar</h3>
+    <p id="empieza"></p>
+    <p>Se continúa en <b>sentido horario</b> ⏰</p>
+    <button onclick="revelar()">🔍 Revelar resultado</button>
+    <div id="resultado" class="rol oculto"></div>
+</div>
+
+</div>
+
+<script>
+const categorias = {
+    "Animales": [
+        "Perro", "Gato", "León", "Tigre", "Elefante", "Jirafa", "Mono", "Oso", "Lobo", "Delfín",
+        "Ballena", "Águila", "Canguro", "Rinoceronte", "Halcón", "Caballo", "Cerdo", "Vaca", "Zorro", "Cisne"
+    ],
+    "Comida": [
+        "Pizza", "Hamburguesa", "Sushi", "Paella", "Tacos", "Pasta", "Arroz", "Helado", "Chocolate", "Ensalada",
+        "Pan", "Queso", "Yogur", "Sopa", "Pescado", "Carne", "Fruta", "Verdura", "Galleta", "Dulce"
+    ],
+    "Lugares": [
+        "Playa", "Montaña", "Escuela", "Hospital", "Cine", "Parque", "Hotel", "Aeropuerto", "Museo", "Restaurante",
+        "Biblioteca", "Estadio", "Centro Comercial", "Iglesia", "Estación", "Puerto", "Bosque", "Río", "Ciudad", "Pueblo"
+    ],
+    "Objetos": [
+        "Mesa", "Silla", "Teléfono", "Ordenador", "Libro", "Reloj", "Mochila", "Llaves", "Televisión", "Cámara",
+        "Lámpara", "Zapato", "Sombrero", "Gafas", "Bolígrafo", "Reloj de pulsera", "Cuchara", "Tenedor", "Plato", "Botella"
+    ],
+    "Profesiones": [
+        "Doctor", "Profesor", "Ingeniero", "Policía", "Bombero", "Chef", "Músico", "Actor", "Programador", "Piloto",
+        "Enfermero", "Abogado", "Arquitecto", "Periodista", "Carpintero", "Pintor", "Fotógrafo", "Cantante", "Diseñador", "Cocinero"
+    ],
+    "Deportes": [
+        "Fútbol", "Baloncesto", "Tenis", "Natación", "Ciclismo", "Boxeo", "Golf", "Voleibol", "Béisbol", "Rugby",
+        "Esquí", "Snowboard", "Surf", "Hockey", "Atletismo", "Karate", "Judo", "Patinaje", "Escalada", "Badminton"
+    ],
+    "Instrumentos Musicales": [
+        "Piano", "Guitarra", "Batería", "Violín", "Flauta", "Saxofón", "Trompeta", "Clarinete", "Arpa", "Ukelele",
+        "Acordeón", "Bajo", "Cajón", "Trombón", "Oboe", "Xilófono", "Banjo", "Mandolina", "Tambor", "Teclado"
+    ],
+    "Vehículos": [
+        "Coche", "Moto", "Bicicleta", "Autobús", "Tren", "Avión", "Barco", "Camión", "Tranvía", "Helicóptero",
+        "Submarino", "Scooter", "Patinete", "Tractor", "Monopatín", "Lancha", "Furgoneta", "Crucero", "Yate", "Canoa"
+    ],
+    "Frutas": [
+        "Manzana", "Pera", "Plátano", "Naranja", "Fresa", "Sandía", "Melón", "Kiwi", "Mango", "Cereza",
+        "Uva", "Piña", "Limón", "Mandarina", "Pomelo", "Frambuesa", "Arándano", "Granada", "Coco", "Papaya"
+    ],
+    "Verduras": [
+        "Lechuga", "Tomate", "Zanahoria", "Pepino", "Espinaca", "Pimiento", "Cebolla", "Ajo", "Calabacín", "Berenjena",
+        "Brócoli", "Coliflor", "Repollo", "Guisantes", "Maíz", "Apio", "Rábano", "Nabo", "Patata", "Batata"
+    ],
+    "Elementos de la Naturaleza": [
+        "Sol", "Luna", "Estrella", "Río", "Lago", "Montaña", "Bosque", "Desierto", "Océano", "Playa",
+        "Nieve", "Viento", "Tormenta", "Arcoíris", "Volcán", "Cueva", "Cascada", "Hierba", "Arena", "Roca"
+    ],
+    "Transporte Público": [
+        "Autobús", "Metro", "Tren", "Tranvía", "Taxi", "Ferry", "Teleférico", "Trolebús", "Funicular", "Monorriel",
+        "Subterráneo", "Bus turístico", "Tren ligero", "Autocar", "Coche compartido", "Bicicleta pública", "Vans", "Furgoneta", "Camión", "Tuk-tuk"
+    ],
+    "Colores": [
+        "Rojo", "Azul", "Verde", "Amarillo", "Negro", "Blanco", "Naranja", "Rosa", "Morado", "Gris",
+        "Cian", "Magenta", "Turquesa", "Lila", "Beige", "Marrón", "Dorado", "Plateado", "Oliva", "Celeste"
+    ],
+    "Tecnología": [
+        "Teléfono", "Computadora", "Tablet", "Reloj inteligente", "Auriculares", "Impresora", "Cámara", "Proyector", "Drone", "Consola",
+        "Router", "Disco duro", "Memoria USB", "Televisor", "Altavoz", "Micrófono", "Smart TV", "Laptop", "Monitor", "Teclado"
+    ]
+};
+
+let jugadores = [];
+let roles = [];
+let jugadorActual = 0;
+let categoriaElegida = "";
+let palabraElegida = "";
+let impostoresReales = [];
+
+function crearJugadores() {
+    const num = document.getElementById("jugadores").value;
+    const cont = document.getElementById("inputsNombres");
+    cont.innerHTML = "";
+
+    for (let i = 0; i < num; i++) {
+        let input = document.createElement("input");
+        input.placeholder = "Jugador " + (i + 1);
+        cont.appendChild(input);
+    }
+
+    document.getElementById("configuracion").classList.add("oculto");
+    document.getElementById("nombres").classList.remove("oculto");
+}
+
+function iniciarJuego() {
+    const inputs = document.querySelectorAll("#inputsNombres input");
+    jugadores = Array.from(inputs).map((i, idx) => i.value || "Jugador " + (idx + 1));
+
+    const keys = Object.keys(categorias);
+    categoriaElegida = keys[Math.floor(Math.random() * keys.length)];
+    palabraElegida = categorias[categoriaElegida][Math.floor(Math.random() * categorias[categoriaElegida].length)];
+
+    roles = Array(jugadores.length).fill(palabraElegida);
+    impostoresReales = [];
+
+    const numImpostores = document.getElementById("impostores").value;
+    const pista = document.getElementById("pistaImpostor").checked;
+
+    let indices = [...Array(jugadores.length).keys()].sort(() => Math.random() - 0.5);
+
+    for (let i = 0; i < numImpostores; i++) {
+        roles[indices[i]] = pista
+            ? `❌ IMPOSTOR\nCategoría: ${categoriaElegida}`
+            : "❌ IMPOSTOR";
+        impostoresReales.push(jugadores[indices[i]]);
+    }
+
+    jugadorActual = 0;
+    document.getElementById("nombres").classList.add("oculto");
+    document.getElementById("juego").classList.remove("oculto");
+    actualizarTurno();
+}
+
+function actualizarTurno() {
+    document.getElementById("turno").textContent = jugadores[jugadorActual];
+    document.getElementById("rol").textContent = "Pulsa ver rol";
+}
+
+function verRol() {
+    document.getElementById("rol").textContent = roles[jugadorActual];
+}
+
+function siguiente() {
+    jugadorActual++;
+    if (jugadorActual >= jugadores.length) {
+        document.getElementById("juego").classList.add("oculto");
+        mostrarInicioDebate();
+    } else {
+        actualizarTurno();
+    }
+}
+
+function mostrarInicioDebate() {
+    const empiezaJugador = jugadores[Math.floor(Math.random() * jugadores.length)];
+    document.getElementById("empieza").textContent =
+        `Empieza hablando: ${empiezaJugador}`;
+    document.getElementById("final").classList.remove("oculto");
+}
+
+function revelar() {
+    const res = document.getElementById("resultado");
+    res.classList.remove("oculto");
+    res.textContent =
+        `🕵️ Impostor(es): ${impostoresReales.join(", ")}\n\n📚 Categoría: ${categoriaElegida}\n🧠 Palabra: ${palabraElegida}`;
+}
+</script>
+
+</body>
+</html>
