@@ -6,12 +6,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
 body {
     margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(135deg, #141e30, #243b55);
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
     color: white;
-    text-align: center;
 }
 
 .container {
@@ -21,46 +22,52 @@ body {
 }
 
 .card {
-    background: rgba(255,255,255,0.1);
-    border-radius: 20px;
-    padding: 20px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 22px;
+    padding: 50px;
     margin-top: 20px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.4);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
 }
 
 input, button {
     width: 100%;
-    padding: 12px;
-    margin-top: 10px;
-    font-size: 16px;
-    border-radius: 12px;
+    padding: 14px;
+    border-radius: 18px;
     border: none;
+    margin-top: 12px;
+    font-size: 16px;
 }
 
-input {
-    background: #eee;
+input[type="checkbox"] {
+    width: auto;
+    transform: scale(1.2);
 }
 
 button {
-    background: #ff4757;
+    background: linear-gradient(135deg, #ff416c, #ff4b2b);
     color: white;
-    font-weight: bold;
+    font-weight: 600;
     cursor: pointer;
 }
 
-button:hover {
-    background: #ff6b81;
+button.secondary {
+    background: linear-gradient(135deg, #1e90ff, #3742fa);
 }
 
 .rol {
-    font-size: 26px;
+    font-size: 24px;
     margin: 20px 0;
     white-space: pre-line;
 }
 
-.oculto {
-    display: none;
+label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
 }
+
+.oculto { display: none; }
 </style>
 </head>
 
@@ -70,34 +77,40 @@ button:hover {
 
 <h1>🕵️ Juego del Impostor</h1>
 
+<!-- CONFIGURACIÓN -->
 <div id="configuracion" class="card">
-    <input type="number" id="jugadores" value="4" min="3" max="20" placeholder="Jugadores">
-    <input type="number" id="impostores" value="1" min="1" max="5" placeholder="Impostores">
-    <label>
-        <input type="checkbox" id="pistaImpostor" checked>
-        Mostrar categoría al impostor
-    </label>
-    <button onclick="crearJugadores()">➡️ Siguiente</button>
+    <input type="number" id="jugadores" min="3" max="20" placeholder="👥 Jugadores">
+    <input type="number" id="impostores" value="1" min="1" max="5" placeholder="🕵️ Impostores">
+
+    <label>🎯 Pista para el impostor <input type="checkbox" id="pistaImpostor" checked></label>
+    <label>🕵️‍♂️ Activar detective <input type="checkbox" id="rolDetective"></label>
+    <label>💣 Activar saboteador <input type="checkbox" id="rolSaboteador"></label>
+
+    <button onclick="crearJugadores()">Empezar 🚀</button>
 </div>
 
+<!-- NOMBRES -->
 <div id="nombres" class="card oculto">
-    <h3>Nombres de los jugadores</h3>
+    <h3>✏️ Nombres</h3>
     <div id="inputsNombres"></div>
-    <button onclick="iniciarJuego()">🎲 Iniciar Juego</button>
+    <button onclick="iniciarJuego()">Continuar 🎲</button>
 </div>
 
+<!-- JUEGO -->
 <div id="juego" class="card oculto">
     <h2 id="turno"></h2>
-    <div class="rol" id="rol">Pulsa ver rol</div>
-    <button onclick="verRol()">👁 Ver Rol</button>
+    <div id="rol" class="rol">Pulsa para ver tu rol</div>
+    <button onclick="verRol()">👁 Ver rol</button>
     <button onclick="siguiente()">➡️ Siguiente</button>
 </div>
 
+<!-- FINAL -->
 <div id="final" class="card oculto">
-    <h3>🗣️ Turno para hablar</h3>
+    <h3>🗣️ Empieza el debate</h3>
     <p id="empieza"></p>
-    <p>Se continúa en <b>sentido horario</b> ⏰</p>
+    <p>Sentido horario ⏰</p>
     <button onclick="revelar()">🔍 Revelar resultado</button>
+    <button class="secondary" onclick="nuevaPartida()">🔄 Nueva partida</button>
     <div id="resultado" class="rol oculto"></div>
 </div>
 
@@ -106,145 +119,201 @@ button:hover {
 <script>
 const categorias = {
     "Animales": [
-        "Perro", "Gato", "León", "Tigre", "Elefante", "Jirafa", "Mono", "Oso", "Lobo", "Delfín",
-        "Ballena", "Águila", "Canguro", "Rinoceronte", "Halcón", "Caballo", "Cerdo", "Vaca", "Zorro", "Cisne"
+        "Perro","Gato","Elefante","León","Tigre","Oso","Lobo","Zorro","Jirafa","Canguro",
+        "Mono","Delfín","Ballena","Tiburón","Tortuga","Rinoceronte","Hipopótamo","Cebra","Caballo","Vaca",
+        "Cerdo","Oveja","Cabra","Águila","Halcón","Búho","Pato","Ganso","Paloma","Loro",
+        "Pingüino","Foca","Cangrejo","Pulpo","Medusa","Camello","Elefante marino","Orca","Serpiente","Cocodrilo",
+        "Lagarto","Rana","Sapo","Caracol","Mariposa","Abeja","Hormiga","Mosquito","Araña","Murciélago",
+        "Castor","Nutria","Erizo","Jabalí","Guepardo","Leopardo","Panda","Koala","Cisne"
     ],
     "Comida": [
-        "Pizza", "Hamburguesa", "Sushi", "Paella", "Tacos", "Pasta", "Arroz", "Helado", "Chocolate", "Ensalada",
-        "Pan", "Queso", "Yogur", "Sopa", "Pescado", "Carne", "Fruta", "Verdura", "Galleta", "Dulce"
-    ],
-    "Lugares": [
-        "Playa", "Montaña", "Escuela", "Hospital", "Cine", "Parque", "Hotel", "Aeropuerto", "Museo", "Restaurante",
-        "Biblioteca", "Estadio", "Centro Comercial", "Iglesia", "Estación", "Puerto", "Bosque", "Río", "Ciudad", "Pueblo"
+        "Pizza","Hamburguesa","Sushi","Paella","Tacos","Pasta","Arroz","Pollo","Carne","Pescado",
+        "Queso","Leche","Huevo","Pan","Mantequilla","Mermelada","Ensalada","Manzana","Plátano","Naranja",
+        "Fresa","Sandía","Melón","Cereza","Kiwi","Mango","Uva","Piña","Limón","Chocolate",
+        "Galleta","Helado","Sopa","Yogur","Cereal","Avena","Maíz","Pimiento","Zanahoria","Tomate",
+        "Patata","Cebolla","Ajo","Espinaca","Lechuga","Brócoli","Calabacín","Berenjena","Champiñón","Nuez",
+        "Almendra","Pistacho","Aceite","Vinagre","Sal","Azúcar","Miel","Coco","Palomitas"
     ],
     "Objetos": [
-        "Mesa", "Silla", "Teléfono", "Ordenador", "Libro", "Reloj", "Mochila", "Llaves", "Televisión", "Cámara",
-        "Lámpara", "Zapato", "Sombrero", "Gafas", "Bolígrafo", "Reloj de pulsera", "Cuchara", "Tenedor", "Plato", "Botella"
-    ],
-    "Profesiones": [
-        "Doctor", "Profesor", "Ingeniero", "Policía", "Bombero", "Chef", "Músico", "Actor", "Programador", "Piloto",
-        "Enfermero", "Abogado", "Arquitecto", "Periodista", "Carpintero", "Pintor", "Fotógrafo", "Cantante", "Diseñador", "Cocinero"
+        "Mesa","Silla","Teléfono","Computadora","Laptop","Teclado","Ratón","Pantalla","Reloj","Cámara",
+        "Libro","Revista","Bolígrafo","Lápiz","Goma","Cuaderno","Mochila","Maleta","Sombrero","Zapato",
+        "Calcetín","Camiseta","Pantalón","Chaqueta","Abrigo","Guantes","Bufanda","Cinturón","Lámpara","Sofá",
+        "Cama","Almohada","Manta","Espejo","Puerta","Ventana","Llave","Botella","Taza","Vaso",
+        "Plato","Cuchara","Tenedor","Cuchillo","Cubo","Escoba","Cepillo","Toalla","Jarrón","Maceta",
+        "Reloj de pulsera","Auriculares","Altavoz","Micrófono","Televisor","Proyector","Drone","Impresora","Router","Disco duro"
     ],
     "Deportes": [
-        "Fútbol", "Baloncesto", "Tenis", "Natación", "Ciclismo", "Boxeo", "Golf", "Voleibol", "Béisbol", "Rugby",
-        "Esquí", "Snowboard", "Surf", "Hockey", "Atletismo", "Karate", "Judo", "Patinaje", "Escalada", "Badminton"
-    ],
-    "Instrumentos Musicales": [
-        "Piano", "Guitarra", "Batería", "Violín", "Flauta", "Saxofón", "Trompeta", "Clarinete", "Arpa", "Ukelele",
-        "Acordeón", "Bajo", "Cajón", "Trombón", "Oboe", "Xilófono", "Banjo", "Mandolina", "Tambor", "Teclado"
-    ],
-    "Vehículos": [
-        "Coche", "Moto", "Bicicleta", "Autobús", "Tren", "Avión", "Barco", "Camión", "Tranvía", "Helicóptero",
-        "Submarino", "Scooter", "Patinete", "Tractor", "Monopatín", "Lancha", "Furgoneta", "Crucero", "Yate", "Canoa"
-    ],
-    "Frutas": [
-        "Manzana", "Pera", "Plátano", "Naranja", "Fresa", "Sandía", "Melón", "Kiwi", "Mango", "Cereza",
-        "Uva", "Piña", "Limón", "Mandarina", "Pomelo", "Frambuesa", "Arándano", "Granada", "Coco", "Papaya"
-    ],
-    "Verduras": [
-        "Lechuga", "Tomate", "Zanahoria", "Pepino", "Espinaca", "Pimiento", "Cebolla", "Ajo", "Calabacín", "Berenjena",
-        "Brócoli", "Coliflor", "Repollo", "Guisantes", "Maíz", "Apio", "Rábano", "Nabo", "Patata", "Batata"
-    ],
-    "Elementos de la Naturaleza": [
-        "Sol", "Luna", "Estrella", "Río", "Lago", "Montaña", "Bosque", "Desierto", "Océano", "Playa",
-        "Nieve", "Viento", "Tormenta", "Arcoíris", "Volcán", "Cueva", "Cascada", "Hierba", "Arena", "Roca"
-    ],
-    "Transporte Público": [
-        "Autobús", "Metro", "Tren", "Tranvía", "Taxi", "Ferry", "Teleférico", "Trolebús", "Funicular", "Monorriel",
-        "Subterráneo", "Bus turístico", "Tren ligero", "Autocar", "Coche compartido", "Bicicleta pública", "Vans", "Furgoneta", "Camión", "Tuk-tuk"
+        "Fútbol","Baloncesto","Tenis","Golf","Natación","Atletismo","Ciclismo","Boxeo","Karate","Judo",
+        "Rugby","Béisbol","Voleibol","Hockey","Esquí","Snowboard","Surf","Patinaje","Remo","Badminton",
+        "Ping Pong","Taekwondo","Esgrima","Lucha libre","Maratón","Motociclismo","Automovilismo","Fórmula 1",
+        "Paracaidismo","Natación sincronizada","Salto de altura","Salto con pértiga","Lanzamiento de jabalina",
+        "Lanzamiento de disco","Lanzamiento de martillo","Carrera de relevos","Gimnasia rítmica","Kickboxing",
+        "Waterpolo","Balonmano"
     ],
     "Colores": [
-        "Rojo", "Azul", "Verde", "Amarillo", "Negro", "Blanco", "Naranja", "Rosa", "Morado", "Gris",
-        "Cian", "Magenta", "Turquesa", "Lila", "Beige", "Marrón", "Dorado", "Plateado", "Oliva", "Celeste"
+        "Rojo","Azul","Verde","Amarillo","Negro","Blanco","Naranja","Rosa","Morado","Gris",
+        "Cian","Magenta","Turquesa","Lila","Beige","Marrón","Dorado","Plateado","Oliva","Celeste",
+        "Salmón","Coral","Violeta","Lavanda","Fucsia","Índigo","Carmesí","Azul Marino","Verde Lima","Amarillo Oro"
     ],
     "Tecnología": [
-        "Teléfono", "Computadora", "Tablet", "Reloj inteligente", "Auriculares", "Impresora", "Cámara", "Proyector", "Drone", "Consola",
-        "Router", "Disco duro", "Memoria USB", "Televisor", "Altavoz", "Micrófono", "Smart TV", "Laptop", "Monitor", "Teclado"
+        "Teléfono","Ordenador","Laptop","Tablet","Auriculares","Altavoz","Monitor","Teclado","Ratón","Impresora",
+        "Proyector","Router","Disco duro","Memoria USB","Cámara","Televisor","Smartwatch","Dron","Consola","Micrófono",
+        "Smart TV","Batería externa","Cargador","Cable USB","Adaptador","Control remoto","Webcam","Gafas VR","Cámara de seguridad","Altavoz Bluetooth",
+        "Micrófono USB"
+    ],
+    "Lugares": [
+        "Casa","Apartamento","Escuela","Universidad","Hospital","Clínica","Parque","Playa","Montaña","Río",
+        "Lago","Ciudad","Pueblo","Cine","Teatro","Museo","Restaurante","Cafetería","Biblioteca","Iglesia",
+        "Estadio","Aeropuerto","Estación de tren","Metro","Autobús","Hotel","Centro comercial","Tienda","Mercado","Zoológico",
+        "Acuario","Planetario","Observatorio","Jardín botánico","Bosque","Desierto","Isla","Puerto","Faro","Cueva",
+        "Castillo","Palacio","Plaza","Fuente","Estatua","Galería de arte","Sala de conciertos","Estadio de fútbol","Pista de hielo","Piscina"
+    ],
+    "Arte y Entretenimiento": [
+        "Star Wars","Harry Potter","El Señor de los Anillos","Titanic","Avatar","Matrix","Juego de Tronos","Breaking Bad","Friends","The Simpsons",
+        "Rock","Pop","Jazz","Hip hop","Reggaeton","Salsa","Música Clásica","Electrónica","Metal","El Quijote",
+        "Romeo y Julieta","Broadway","Circo","Ópera","Teatro","Musical","Baile","Cine","Fotografía","Escultura",
+        "Pintura"
+    ],
+    "Profesiones": [
+        "Médico","Enfermero","Dentista","Ingeniero","Arquitecto","Profesor","Abogado","Juez","Policía","Bombero",
+        "Chef","Piloto","Azafata","Soldado","Artista","Músico","Actor","Bailarín","Cantante","Escritor",
+        "Periodista","Fotógrafo","Científico","Investigador","Programador","Diseñador","Carpintero","Fontanero","Electricista","Atleta",
+        "Futbolista","Tenista","Nadador","Corredor","Ciclista","Boxeador","Gimnasta","Golfista","Esgrimista","Veterinario",
+        "Psicólogo","Trabajador social","Recepcionista","Contador","Banquero","Ingeniero"
+    ],
+    "Superpoderes": [
+        "Superfuerza","Supervelocidad","Volar","Invisibilidad","Rayos X","Telequinesis","Telepatía","Control del tiempo","Regeneración","Elasticidad",
+        "Respirar bajo el agua","Control del fuego","Control del hielo","Teletransportación","Súper salto","Control de electricidad","Mimetismo","Control del clima","Inmunidad","Control mental",
+        "Absorber poderes","Viajar en el tiempo","Súper intelecto","Duplicación","Camuflaje","Control de gravedad","Magnetismo","Control de naturaleza"
+    ],
+    "Navidad": [
+        "Papa Noel","Reno","Trineo","Galleta","Árbol de Navidad","Luces navideñas","Villancico","Regalo",
+        "Muérdago","Bastón de caramelo","Campana","Estrella","Duende","Nieve","Esquí","Guantes",
+        "Bufanda","Nochebuena","Turrón","Polvorón","Gorro navideño","Copos de nieve","Belén","Linterna",
+        "Velas","Bolitas de árbol","Papel de regalo","Cinta","Chimenea","Campanilla","Bola de nieve","Muñeco de nieve",
+        "Patinaje","Chocolate caliente"
+    ],
+    "Cuentos famosos": [
+        "Caperucita Roja","Blancanieves","La Cenicienta","Hansel y Gretel","La Bella Durmiente","El Patito Feo",
+        "Los Tres Cerditos","La Liebre y la Tortuga","Ricitos de Oro","Pinocho","El Soldadito de Plomo","El Gato con Botas",
+        "El Lobo y los Siete Cabritos","La Sirenita","Rapunzel","La Bella y la Bestia","El Mago de Oz","Peter Pan",
+        "Aladino","Alicia en el País de las Maravillas","Jack y las Habichuelas Mágicas","Pulgarcito","La Tortuga y la Liebre"
+    ],
+    "Personajes famosos": [
+        "Harry Potter","Lord Voldemort","Albus Dumbledore","Simba","Timon","Pumba","Mickey Mouse","Pato Donald","Goofy",
+        "Tío Gilito","Minni Mouse","Pluto","Batman","Superman","Wonder Woman","Flash","Aquaman","Spiderman","Iron Man",
+        "Capitán América","Hulk","Thor","Sherlock Holmes","James Bond","Indiana Jones","Jack Sparrow",
+        "Dora la Exploradora","Bob Esponja","Patricio Estrella","Popeye","Betty Boop"
+    ],
+    "Transporte": [
+        "Coche","Moto","Bicicleta","Autobús","Tren","Metro","Tranvía","Avión","Barco","Helicóptero",
+        "Submarino","Camión","Furgoneta","Taxi","Patinete","Lancha","Yate","Tractor",
+        "Monopatín","Canoa","Kayak","Velero","Crucero","Teleférico","Bicicleta eléctrica","Trineo","Carro de caballos",
+        "Globo aerostático","Motonieve","Balsa","Coche de policía","Ambulancia","Camión de bomberos","Grúa","Caravana","Autocaravana","Camión cisterna","Coche de Fórmula 1"
     ]
 };
 
-let jugadores = [];
-let roles = [];
-let jugadorActual = 0;
-let categoriaElegida = "";
-let palabraElegida = "";
-let impostoresReales = [];
+
+
+let jugadores=[], roles=[], impostoresReales=[];
+let jugadorActual=0, categoria="", palabra="";
+let detective="", saboteador="";
 
 function crearJugadores() {
-    const num = document.getElementById("jugadores").value;
-    const cont = document.getElementById("inputsNombres");
-    cont.innerHTML = "";
-
-    for (let i = 0; i < num; i++) {
-        let input = document.createElement("input");
-        input.placeholder = "Jugador " + (i + 1);
+    const num=document.getElementById("jugadores").value||4;
+    const cont=document.getElementById("inputsNombres");
+    cont.innerHTML="";
+    const guardados=JSON.parse(localStorage.getItem("jugadores"))||[];
+    for(let i=0;i<num;i++){
+        const input=document.createElement("input");
+        input.value=guardados[i]||"";
+        input.placeholder="Jugador "+(i+1);
         cont.appendChild(input);
     }
-
     document.getElementById("configuracion").classList.add("oculto");
     document.getElementById("nombres").classList.remove("oculto");
 }
 
 function iniciarJuego() {
-    const inputs = document.querySelectorAll("#inputsNombres input");
-    jugadores = Array.from(inputs).map((i, idx) => i.value || "Jugador " + (idx + 1));
+    jugadores=[...document.querySelectorAll("#inputsNombres input")]
+        .map((i,idx)=>i.value||"Jugador "+(idx+1));
+    localStorage.setItem("jugadores",JSON.stringify(jugadores));
 
-    const keys = Object.keys(categorias);
-    categoriaElegida = keys[Math.floor(Math.random() * keys.length)];
-    palabraElegida = categorias[categoriaElegida][Math.floor(Math.random() * categorias[categoriaElegida].length)];
+    const keys=Object.keys(categorias);
+    categoria=keys[Math.floor(Math.random()*keys.length)];
+    palabra=categorias[categoria][Math.floor(Math.random()*categorias[categoria].length)];
 
-    roles = Array(jugadores.length).fill(palabraElegida);
-    impostoresReales = [];
+    roles=Array(jugadores.length).fill(`✅ CIVIL\nPalabra: ${palabra}`);
+    impostoresReales=[];
+    detective="";
+    saboteador="";
 
-    const numImpostores = document.getElementById("impostores").value;
-    const pista = document.getElementById("pistaImpostor").checked;
+    let indices=[...Array(jugadores.length).keys()].sort(()=>Math.random()-0.5);
 
-    let indices = [...Array(jugadores.length).keys()].sort(() => Math.random() - 0.5);
+    const numImpostores=document.getElementById("impostores").value;
+    const pista=document.getElementById("pistaImpostor").checked;
 
-    for (let i = 0; i < numImpostores; i++) {
-        roles[indices[i]] = pista
-            ? `❌ IMPOSTOR\nCategoría: ${categoriaElegida}`
+    for(let i=0;i<numImpostores;i++){
+        roles[indices[i]]=pista
+            ? `❌ IMPOSTOR\nCategoría: ${categoria}`
             : "❌ IMPOSTOR";
         impostoresReales.push(jugadores[indices[i]]);
     }
 
-    jugadorActual = 0;
+    let pos=numImpostores;
+
+    if(document.getElementById("rolDetective").checked){
+        roles[indices[pos]]=`🕵️‍♂️ DETECTIVE\nPalabra: ${palabra}`;
+        detective=jugadores[indices[pos]];
+        pos++;
+    }
+
+    if(document.getElementById("rolSaboteador").checked){
+        roles[indices[pos]]=
+            `💣 SABOTEADOR\nPalabra: ${palabra}\nObjetivo: que te voten como impostor`;
+        saboteador=jugadores[indices[pos]];
+    }
+
+    jugadorActual=0;
     document.getElementById("nombres").classList.add("oculto");
     document.getElementById("juego").classList.remove("oculto");
     actualizarTurno();
 }
 
-function actualizarTurno() {
-    document.getElementById("turno").textContent = jugadores[jugadorActual];
-    document.getElementById("rol").textContent = "Pulsa ver rol";
+function actualizarTurno(){
+    document.getElementById("turno").textContent=jugadores[jugadorActual];
+    document.getElementById("rol").textContent="Pulsa para ver tu rol";
 }
 
-function verRol() {
-    document.getElementById("rol").textContent = roles[jugadorActual];
+function verRol(){
+    document.getElementById("rol").textContent=roles[jugadorActual];
 }
 
-function siguiente() {
+function siguiente(){
     jugadorActual++;
-    if (jugadorActual >= jugadores.length) {
+    if(jugadorActual>=jugadores.length){
         document.getElementById("juego").classList.add("oculto");
-        mostrarInicioDebate();
-    } else {
-        actualizarTurno();
-    }
+        document.getElementById("final").classList.remove("oculto");
+        document.getElementById("empieza").textContent=
+            "Empieza hablando: "+jugadores[Math.floor(Math.random()*jugadores.length)];
+    } else actualizarTurno();
 }
 
-function mostrarInicioDebate() {
-    const empiezaJugador = jugadores[Math.floor(Math.random() * jugadores.length)];
-    document.getElementById("empieza").textContent =
-        `Empieza hablando: ${empiezaJugador}`;
-    document.getElementById("final").classList.remove("oculto");
+function revelar(){
+    const r=document.getElementById("resultado");
+    r.classList.remove("oculto");
+    r.textContent=
+`🕵️ Impostor(es): ${impostoresReales.join(", ")}
+🕵️‍♂️ Detective: ${detective||"Ninguno"}
+💣 Saboteador: ${saboteador||"Ninguno"}
+📚 Categoría: ${categoria}
+🧠 Palabra: ${palabra}`;
 }
 
-function revelar() {
-    const res = document.getElementById("resultado");
-    res.classList.remove("oculto");
-    res.textContent =
-        `🕵️ Impostor(es): ${impostoresReales.join(", ")}\n\n📚 Categoría: ${categoriaElegida}\n🧠 Palabra: ${palabraElegida}`;
+function nuevaPartida(){
+    document.getElementById("final").classList.add("oculto");
+    document.getElementById("resultado").classList.add("oculto");
+    document.getElementById("configuracion").classList.remove("oculto");
 }
 </script>
 
