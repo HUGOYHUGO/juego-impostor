@@ -83,8 +83,8 @@ label {
     <input type="number" id="impostores" value="1" min="1" max="5" placeholder="🕵️ Impostores">
 
     <label>🎯 Pista para el impostor <input type="checkbox" id="pistaImpostor" checked></label>
-    <label>🕵️‍♂️ Activar detective <input type="checkbox" id="rolDetective"></label>
-    <label>💣 Activar saboteador <input type="checkbox" id="rolSaboteador"></label>
+    <label>🕵️‍♂️ Activar detective (>=8 Jugadores)<input type="checkbox" id="rolDetective"></label>
+    <label>💣 Activar saboteador (>=8 Jugadores)<input type="checkbox" id="rolSaboteador"></label>
 
     <button onclick="crearJugadores()">Empezar 🚀</button>
 </div>
@@ -168,11 +168,11 @@ const categorias = {
         "Acuario","Planetario","Observatorio","Jardín botánico","Bosque","Desierto","Isla","Puerto","Faro","Cueva",
         "Castillo","Palacio","Plaza","Fuente","Estatua","Galería de arte","Sala de conciertos","Estadio de fútbol","Pista de hielo","Piscina"
     ],
-    "Arte y Entretenimiento": [
+    "Películas y series": [
         "Star Wars","Harry Potter","El Señor de los Anillos","Titanic","Avatar","Matrix","Juego de Tronos","Breaking Bad","Friends","The Simpsons",
-        "Rock","Pop","Jazz","Hip hop","Reggaeton","Música Salsa","Música Clásica","Música Electrónica","Música Metal","El Quijote",
-        "Romeo y Julieta","Circo","Ópera","Teatro","Musical","Baile","Cine","Fotografía","Escultura",
-        "Pintura"
+        "Stranger Things","Titanic","Jurassic Park","La Casa de Papel","Superman","Matrix","Ice Age","Madagascar","Los Increibles","El Quijote",
+        "Romeo y Julieta","Los Vengadores","Padre de Familia","Bob Esponja","Doraemon","Shin-chan","Dora la Exploradora","El mundo de Gumball","Caillou",
+        "Dragon Ball Z"
     ],
     "Profesiones": [
         "Médico","Enfermero","Dentista","Ingeniero","Arquitecto","Profesor","Abogado","Juez","Policía","Bombero",
@@ -181,10 +181,10 @@ const categorias = {
         "Futbolista","Tenista","Nadador","Corredor","Ciclista","Boxeador","Gimnasta","Golfista","Esgrimista","Veterinario",
         "Psicólogo","Trabajador social","Recepcionista","Contador","Banquero","Ingeniero"
     ],
-    "Superpoderes": [
-        "Superfuerza","Supervelocidad","Volar","Invisibilidad","Rayos X","Telequinesis","Telepatía","Control del tiempo","Regeneración","Elasticidad",
-        "Respirar bajo el agua","Control del fuego","Control del hielo","Teletransportación","Súper salto","Control de electricidad","Mimetismo","Control del clima","Inmunidad","Control mental",
-        "Absorber poderes","Viajar en el tiempo","Súper intelecto","Duplicación","Camuflaje","Control de gravedad","Magnetismo","Control de naturaleza"
+    "Superheroes y villanos": [
+        "Capitán América","Iron Man","Thor","Hulk","Ant-Man","Spider-Man","Capitana Marvel","Deadpool","Lobezno","Superman",
+        "Batman","Wonder Woman","Aquaman","Flash","Shazam","Robin","Harley Quinn","Joker","Thanos","Duende verde",
+        "Magneto","Loki","Súper intelecto","Duplicación","Camuflaje","Control de gravedad","Magnetismo","Control de naturaleza"
     ],
     "Navidad": [
         "Papa Noel","Reno","Trineo","Galleta","Árbol de Navidad","Luces navideñas","Villancico","Regalo",
@@ -200,9 +200,11 @@ const categorias = {
         "Aladin","Alicia en el País de las Maravillas","Jack y las Habichuelas Mágicas","Pulgarcito","La Tortuga y la Liebre"
     ],
     "Personajes famosos": [
-        "Harry Potter","Lord Voldemort","Albus Dumbledore","Simba","Timon","Pumba","Mickey Mouse","Pato Donald","Goofy",
-        "Tío Gilito","Minni Mouse","Pluto","Batman","Superman","Wonder Woman","Flash","Aquaman","Spiderman","Iron Man",
-        "Capitán América","Hulk","Thor","Sherlock Holmes","James Bond","Indiana Jones","Jack Sparrow",
+        "Harry Potter","Goku","Pikachu","Homer Simpson","Shrek","Mickey Mouse","Pato Donald",
+        "Bugs Bunny","Batman","Capitán América","Pitufo","Sonic el erizo",
+        "Iron Man","Thor","Hulk","Spider-Man","Deadpool","Lobezno (Wolverine)","Superman",
+        "Batman","Wonder Woman","Aquaman","Flash","El Joker","Super Mario",
+        "Sherlock Holmes","James Bond","Indiana Jones","Jack Sparrow",
         "Dora la Exploradora","Bob Esponja","Patricio Estrella","Popeye","Betty Boop"
     ],
     "Transporte": [
@@ -243,7 +245,9 @@ function iniciarJuego() {
     categoria=keys[Math.floor(Math.random()*keys.length)];
     palabra=categorias[categoria][Math.floor(Math.random()*categorias[categoria].length)];
 
-    roles=Array(jugadores.length).fill(`✅ CIVIL\nPalabra: ${palabra}`);
+    roles = Array(jugadores.length).fill(
+    `✅ CIVIL\nCategoría: ${categoria}\nPalabra: ${palabra}`
+    );
     impostoresReales=[];
     detective="";
     saboteador="";
@@ -263,14 +267,21 @@ function iniciarJuego() {
     let pos=numImpostores;
 
     if(document.getElementById("rolDetective").checked){
-        roles[indices[pos]]=`🕵️‍♂️ DETECTIVE\nPalabra: ${palabra}`;
+        roles[indices[pos]]=
+        `🕵️‍♂️ DETECTIVE
+        Categoría: ${categoria}
+        Palabra: ${palabra}
+        Habilidad: Puedes obligar a una persona a revelar su rol`;
         detective=jugadores[indices[pos]];
         pos++;
     }
 
     if(document.getElementById("rolSaboteador").checked){
         roles[indices[pos]]=
-            `💣 SABOTEADOR\nPalabra: ${palabra}\nObjetivo: que te voten como impostor`;
+            `💣 SABOTEADOR
+            Categoría: ${categoria}
+            Palabra: ${palabra}
+            Objetivo: que te voten como impostor para ganar`;
         saboteador=jugadores[indices[pos]];
     }
 
@@ -319,4 +330,5 @@ function nuevaPartida(){
 
 </body>
 </html>
+
 
