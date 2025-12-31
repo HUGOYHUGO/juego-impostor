@@ -181,11 +181,6 @@ const categorias = {
         "Futbolista","Tenista","Nadador","Corredor","Ciclista","Boxeador","Gimnasta","Golfista","Esgrimista","Veterinario",
         "Psicólogo","Trabajador social","Recepcionista","Contador","Banquero","Ingeniero"
     ],
-    "Superheroes y villanos": [
-        "Capitán América","Iron Man","Thor","Hulk","Ant-Man","Spider-Man","Capitana Marvel","Deadpool","Lobezno","Superman",
-        "Batman","Wonder Woman","Aquaman","Flash","Shazam","Robin","Harley Quinn","Joker","Thanos","Duende verde",
-        "Magneto","Loki","Súper intelecto","Duplicación","Camuflaje","Control de gravedad","Magnetismo","Control de naturaleza"
-    ],
     "Navidad": [
         "Papa Noel","Reno","Trineo","Galleta","Árbol de Navidad","Luces navideñas","Villancico","Regalo",
         "Muérdago","Bastón de caramelo","Campana","Estrella","Duende","Nieve","Esquí","Guantes",
@@ -246,7 +241,7 @@ function iniciarJuego() {
     palabra=categorias[categoria][Math.floor(Math.random()*categorias[categoria].length)];
 
     roles = Array(jugadores.length).fill(
-    `✅ CIVIL\nCategoría: ${categoria}\nPalabra: ${palabra}`
+    `✅ CIVIL\nPalabra: ${palabra}`
     );
     impostoresReales=[];
     detective="";
@@ -330,5 +325,6 @@ function nuevaPartida(){
 
 </body>
 </html>
+
 
 
