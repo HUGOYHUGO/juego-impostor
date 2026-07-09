@@ -2,116 +2,692 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Juego del Impostor</title>
+<title>Impostor · Expediente</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
 
-body {
-    margin: 0;
-    font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-    color: white;
+:root{
+    --bg-base:#05070a;
+    --panel:rgba(17,21,29,0.86);
+    --panel-border:rgba(255,255,255,0.07);
+    --panel-border-soft:rgba(255,255,255,0.04);
+    --accent-red:#ff2e4d;
+    --accent-red-dim:rgba(255,46,77,0.16);
+    --accent-teal:#2fe6b8;
+    --accent-teal-dim:rgba(47,230,184,0.16);
+    --accent-amber:#ffcf3f;
+    --accent-amber-dim:rgba(255,207,63,0.16);
+    --accent-purple:#b085f5;
+    --accent-purple-dim:rgba(176,133,245,0.16);
+    --text:#f2f3f5;
+    --text-dim:#8d96a5;
 }
 
-.container {
-    max-width: 420px;
-    margin: auto;
-    padding: 20px;
+*{ box-sizing:border-box; }
+
+html,body{ height:100%; }
+
+body{
+    margin:0;
+    font-family:'Inter',sans-serif;
+    background:var(--bg-base);
+    color:var(--text);
+    min-height:100vh;
+    position:relative;
+    overflow-x:hidden;
 }
 
-.card {
-    background: rgba(255,255,255,0.12);
-    border-radius: 22px;
-    padding: 50px;
-    margin-top: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+/* ---------- Escena de fondo: foco + grano + viñeta ---------- */
+.escena{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    overflow:hidden;
 }
 
-input, button {
-    width: 100%;
-    padding: 14px;
-    border-radius: 18px;
-    border: none;
-    margin-top: 12px;
-    font-size: 16px;
+.foco{
+    position:absolute;
+    width:140vmax;
+    height:140vmax;
+    top:-40vmax;
+    left:-20vmax;
+    background:radial-gradient(circle, rgba(255,207,63,0.10) 0%, rgba(255,207,63,0.04) 22%, transparent 55%);
+    animation:barrido 22s ease-in-out infinite;
+    mix-blend-mode:screen;
 }
 
-input[type="checkbox"] {
-    width: auto;
-    transform: scale(1.2);
+@keyframes barrido{
+    0%   { transform:translate(0,0) rotate(0deg); }
+    50%  { transform:translate(18vmax,10vmax) rotate(20deg); }
+    100% { transform:translate(0,0) rotate(0deg); }
 }
 
-button {
-    background: linear-gradient(135deg, #ff416c, #ff4b2b);
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
+.vineta{
+    position:absolute;
+    inset:0;
+    background:radial-gradient(circle at 50% 15%, rgba(30,36,48,0.55) 0%, rgba(5,7,10,0) 40%),
+               radial-gradient(circle at 50% 100%, rgba(0,0,0,0.75) 0%, transparent 60%);
 }
 
-button.secondary {
-    background: linear-gradient(135deg, #1e90ff, #3742fa);
+.grano{
+    position:absolute;
+    inset:0;
+    opacity:0.5;
+    background-image:radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size:3px 3px;
 }
 
-.rol {
-    font-size: 24px;
-    margin: 20px 0;
-    white-space: pre-line;
+/* ---------- Layout ---------- */
+.container{
+    position:relative;
+    z-index:1;
+    max-width:440px;
+    margin:auto;
+    padding:28px 18px 60px;
 }
 
-label {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 10px;
+.masthead{
+    text-align:center;
+    margin-bottom:6px;
+    animation:entrada 0.5s ease;
 }
 
-.oculto { display: none; }
+.masthead .icono{
+    width:46px;
+    height:46px;
+    margin:0 auto 6px;
+    color:var(--accent-red);
+    filter:drop-shadow(0 0 10px rgba(255,46,77,0.5));
+}
+
+.masthead h1{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:44px;
+    letter-spacing:6px;
+    margin:0;
+    line-height:1;
+}
+
+.masthead .subtitulo{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:var(--text-dim);
+    margin-top:6px;
+}
+
+/* ---------- Tarjetas ---------- */
+.card{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:16px;
+    padding:26px 24px 28px;
+    margin-top:22px;
+    backdrop-filter:blur(6px);
+    box-shadow:0 18px 40px rgba(0,0,0,0.45);
+    animation:entrada 0.45s ease;
+    position:relative;
+    overflow:hidden;
+}
+
+.card::before{
+    content:"";
+    position:absolute;
+    top:0; left:0; right:0;
+    height:3px;
+    background:repeating-linear-gradient(-45deg,
+        var(--tape,var(--accent-amber)) 0 10px,
+        rgba(10,10,10,0.9) 10px 20px);
+    opacity:0.85;
+}
+
+.card--game{ --tape:var(--accent-red); }
+.card--final{ --tape:var(--accent-purple); }
+
+@keyframes entrada{
+    from{ opacity:0; transform:translateY(14px) scale(0.98); }
+    to{ opacity:1; transform:translateY(0) scale(1); }
+}
+
+.card h3{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:22px;
+    letter-spacing:2px;
+    margin:0 0 2px;
+    color:var(--text);
+}
+
+.card .lead{
+    font-size:12.5px;
+    color:var(--text-dim);
+    margin:0 0 16px;
+}
+
+/* ---------- Campos ---------- */
+.campo{ margin-top:16px; }
+
+.campo label{
+    display:block;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--text-dim);
+    margin-bottom:6px;
+}
+
+input[type="number"], input[type="text"]{
+    width:100%;
+    padding:13px 14px;
+    border-radius:10px;
+    border:1px solid var(--panel-border);
+    background:rgba(255,255,255,0.04);
+    color:var(--text);
+    font-size:16px;
+    font-family:inherit;
+    transition:box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+input[type="number"]:focus, input[type="text"]:focus{
+    outline:none;
+    border-color:var(--accent-red);
+    box-shadow:0 0 0 3px var(--accent-red-dim);
+}
+
+/* ---------- Toggles ---------- */
+.toggle-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:10px 0;
+    border-bottom:1px solid var(--panel-border-soft);
+}
+
+.toggle-row:last-of-type{ border-bottom:none; }
+
+.toggle-info{ display:flex; flex-direction:column; gap:2px; }
+.toggle-info .titulo{ font-size:14.5px; font-weight:600; }
+.toggle-info .detalle{ font-size:11.5px; color:var(--text-dim); }
+
+.switch{
+    position:relative;
+    width:44px;
+    height:26px;
+    flex:0 0 auto;
+}
+
+.switch input{
+    opacity:0;
+    width:100%;
+    height:100%;
+    margin:0;
+    position:absolute;
+    cursor:pointer;
+    z-index:2;
+}
+
+.switch .rail{
+    position:absolute;
+    inset:0;
+    background:rgba(255,255,255,0.12);
+    border-radius:999px;
+    transition:background 0.2s ease;
+}
+
+.switch .knob{
+    position:absolute;
+    top:3px; left:3px;
+    width:20px; height:20px;
+    border-radius:50%;
+    background:#fff;
+    transition:transform 0.2s ease;
+}
+
+.switch input:checked ~ .rail{ background:var(--accent-red); }
+.switch input:checked ~ .knob{ transform:translateX(18px); }
+
+/* ---------- Categorías ---------- */
+.acciones-cat{
+    display:flex;
+    gap:8px;
+    margin:10px 0 4px;
+}
+
+.boton-mini{
+    flex:1;
+    padding:9px;
+    border-radius:8px;
+    border:1px solid var(--panel-border);
+    background:rgba(255,255,255,0.04);
+    color:var(--text-dim);
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:border-color 0.2s ease, color 0.2s ease;
+}
+
+.boton-mini:hover{ border-color:var(--accent-red); color:var(--text); }
+
+.categorias-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-top:10px;
+}
+
+.cat-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:rgba(255,255,255,0.03);
+    border:1px dashed var(--panel-border);
+    border-radius:9px;
+    padding:9px 10px;
+    font-size:12.5px;
+    cursor:pointer;
+    transition:background 0.2s ease, border-color 0.2s ease;
+}
+
+.cat-item input{ accent-color:var(--accent-red); }
+
+.cat-item:has(input:checked){
+    background:var(--accent-red-dim);
+    border-color:var(--accent-red);
+    border-style:solid;
+}
+
+/* ---------- Avisos ---------- */
+.aviso{
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    background:var(--accent-amber-dim);
+    border:1px solid rgba(255,207,63,0.35);
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:12.5px;
+    color:#ffe9a8;
+    margin-top:14px;
+    animation:entrada 0.3s ease;
+}
+
+.aviso svg{ width:16px; height:16px; flex:0 0 auto; margin-top:1px; }
+
+.oculto{ display:none; }
+
+/* ---------- Botones ---------- */
+.boton{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    padding:15px;
+    margin-top:14px;
+    border-radius:12px;
+    border:none;
+    background:linear-gradient(135deg,var(--accent-red),#c8102e);
+    color:#fff;
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+    font-size:14.5px;
+    letter-spacing:0.4px;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
+}
+
+.boton svg{ width:18px; height:18px; }
+
+.boton:hover:not(:disabled){
+    transform:translateY(-2px);
+    box-shadow:0 8px 20px rgba(255,46,77,0.35);
+}
+
+.boton:active:not(:disabled){ transform:translateY(0) scale(0.98); }
+
+.boton:disabled{
+    opacity:0.35;
+    cursor:not-allowed;
+    box-shadow:none;
+    transform:none;
+}
+
+.boton--secundario{
+    background:rgba(255,255,255,0.06);
+    border:1px solid var(--panel-border);
+    color:var(--text);
+}
+
+.boton--secundario:hover:not(:disabled){
+    box-shadow:0 8px 20px rgba(255,255,255,0.08);
+}
+
+.boton--fantasma{
+    background:transparent;
+    border:1px solid var(--accent-teal);
+    color:var(--accent-teal);
+}
+
+.boton--fantasma:hover:not(:disabled){
+    box-shadow:0 8px 20px rgba(47,230,184,0.25);
+}
+
+/* ---------- Barra de progreso ---------- */
+.barra-progreso{
+    display:flex;
+    gap:4px;
+    margin:6px 0 20px;
+}
+
+.barra-progreso span{
+    flex:1;
+    height:5px;
+    border-radius:3px;
+    background:rgba(255,255,255,0.1);
+    transition:background 0.3s ease;
+}
+
+.barra-progreso span.hecho{ background:var(--accent-red); }
+
+/* ---------- Turno ---------- */
+.turno-etiqueta{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--text-dim);
+    text-align:center;
+    margin:0;
+}
+
+#turno{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:36px;
+    letter-spacing:2px;
+    text-align:center;
+    margin:2px 0 18px;
+    animation:entrada 0.35s ease;
+}
+
+/* ---------- Panel de rol ---------- */
+.rol-panel{
+    border:1px solid var(--panel-border);
+    border-radius:12px;
+    background:rgba(0,0,0,0.35);
+    padding:26px 18px;
+    text-align:center;
+    min-height:110px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+}
+
+.rol-panel .icono-espera{
+    width:26px;
+    height:26px;
+    color:var(--text-dim);
+    opacity:0.6;
+}
+
+.rol-panel .pista-espera{
+    font-size:13px;
+    color:var(--text-dim);
+}
+
+.rol-etiqueta{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-family:'Bebas Neue',sans-serif;
+    font-size:24px;
+    letter-spacing:2px;
+    padding:4px 14px;
+    border-radius:999px;
+}
+
+.rol-etiqueta svg{ width:18px; height:18px; }
+
+.rol-etiqueta.civil{ background:var(--accent-teal-dim); color:var(--accent-teal); }
+.rol-etiqueta.impostor{ background:var(--accent-red-dim); color:var(--accent-red); }
+.rol-etiqueta.detective{ background:var(--accent-amber-dim); color:var(--accent-amber); }
+.rol-etiqueta.saboteador{ background:var(--accent-purple-dim); color:var(--accent-purple); }
+
+.rol-detalle{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13.5px;
+    line-height:1.7;
+    color:var(--text-dim);
+    white-space:pre-line;
+}
+
+.rol-detalle b{ color:var(--text); font-weight:600; }
+
+.rol-panel.flicker{ animation:girar 0.45s ease, parpadeo 0.55s ease-out; }
+
+@keyframes girar{
+    0%{ opacity:0; transform:rotateX(85deg) scale(0.92); }
+    60%{ opacity:1; transform:rotateX(-8deg) scale(1.02); }
+    100%{ opacity:1; transform:rotateX(0deg) scale(1); }
+}
+
+@keyframes parpadeo{
+    0%{ filter:brightness(0.3); }
+    12%{ filter:brightness(1.5); }
+    24%{ filter:brightness(0.5); }
+    36%{ filter:brightness(1.25); }
+    55%{ filter:brightness(0.85); }
+    100%{ filter:brightness(1); }
+}
+
+/* ---------- Final ---------- */
+.aviso-debate{
+    text-align:center;
+    font-size:13px;
+    color:var(--text-dim);
+    margin:2px 0 4px;
+}
+
+#empieza{
+    text-align:center;
+    font-family:'Bebas Neue',sans-serif;
+    font-size:26px;
+    letter-spacing:1px;
+    margin:6px 0 18px;
+}
+
+.resultado-panel{
+    margin-top:16px;
+    border:1px solid var(--panel-border);
+    border-radius:12px;
+    background:rgba(0,0,0,0.35);
+    padding:18px;
+}
+
+.resultado-linea{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    padding:8px 0;
+    border-bottom:1px solid var(--panel-border-soft);
+    font-size:13.5px;
+}
+
+.resultado-linea:last-child{ border-bottom:none; }
+
+.resultado-linea .etiqueta{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--text-dim);
+}
+
+.resultado-linea .valor{ font-weight:600; text-align:right; }
+
+.resultado-panel.revelado{ animation:girar 0.5s ease; }
+
+@media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{
+        animation-duration:0.001ms !important;
+        transition-duration:0.001ms !important;
+    }
+    .foco{ animation:none; }
+}
 </style>
 </head>
 
 <body>
 
+<div class="escena">
+    <div class="foco"></div>
+    <div class="vineta"></div>
+    <div class="grano"></div>
+</div>
+
 <div class="container">
 
-<h1>🕵️ Juego del Impostor</h1>
+<header class="masthead">
+    <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <path d="M12 2c-3 0-5 2-5 5v3H5a2 2 0 0 0-2 2v7a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-7a2 2 0 0 0-2-2h-2V7c0-3-2-5-5-5Z"/>
+        <path d="M9 10V7a3 3 0 0 1 6 0v3"/>
+        <circle cx="9.5" cy="15" r="1.4" fill="currentColor" stroke="none"/>
+        <circle cx="14.5" cy="15" r="1.4" fill="currentColor" stroke="none"/>
+    </svg>
+    <h1>IMPOSTOR</h1>
+    <p class="subtitulo">Expediente confidencial · No compartir</p>
+</header>
 
 <!-- CONFIGURACIÓN -->
 <div id="configuracion" class="card">
-    <input type="number" id="jugadores" min="3" max="20" placeholder="👥 Jugadores">
-    <input type="number" id="impostores" value="1" min="1" max="5" placeholder="🕵️ Impostores">
+    <h3>Nueva investigación</h3>
+    <p class="lead">Define los parámetros de la partida</p>
 
-    <label>🎯 Pista para el impostor <input type="checkbox" id="pistaImpostor" checked></label>
-    <label>🕵️‍♂️ Activar detective (>=8 Jugadores)<input type="checkbox" id="rolDetective"></label>
-    <label>💣 Activar saboteador (>=8 Jugadores)<input type="checkbox" id="rolSaboteador"></label>
+    <div class="campo">
+        <label for="jugadores">Jugadores</label>
+        <input type="number" id="jugadores" min="3" max="20" placeholder="Ej. 6">
+    </div>
 
-    <button onclick="crearJugadores()">Empezar 🚀</button>
+    <div class="campo">
+        <label for="impostores">Impostores</label>
+        <input type="number" id="impostores" value="1" min="1" max="5">
+    </div>
+
+    <div class="campo">
+        <div class="toggle-row">
+            <div class="toggle-info">
+                <span class="titulo">Pista para el impostor</span>
+                <span class="detalle">Verá la categoría de la palabra</span>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="pistaImpostor" checked>
+                <span class="rail"></span><span class="knob"></span>
+            </label>
+        </div>
+        <div class="toggle-row">
+            <div class="toggle-info">
+                <span class="titulo">Detective</span>
+                <span class="detalle">Recomendado con 8+ jugadores</span>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="rolDetective">
+                <span class="rail"></span><span class="knob"></span>
+            </label>
+        </div>
+        <div class="toggle-row">
+            <div class="toggle-info">
+                <span class="titulo">Saboteador</span>
+                <span class="detalle">Recomendado con 8+ jugadores</span>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="rolSaboteador">
+                <span class="rail"></span><span class="knob"></span>
+            </label>
+        </div>
+    </div>
+
+    <h3 style="margin-top:22px;">Categorías</h3>
+    <p class="lead">Elige de qué temas puede salir la palabra</p>
+    <div class="acciones-cat">
+        <button type="button" class="boton-mini" onclick="marcarCategorias(true)">Marcar todas</button>
+        <button type="button" class="boton-mini" onclick="marcarCategorias(false)">Desmarcar</button>
+    </div>
+    <div id="categoriasGrid" class="categorias-grid"></div>
+
+    <div id="avisoConfig" class="aviso oculto"></div>
+
+    <button class="boton" onclick="crearJugadores()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        Empezar
+    </button>
 </div>
 
 <!-- NOMBRES -->
 <div id="nombres" class="card oculto">
-    <h3>✏️ Nombres</h3>
+    <h3>Identifica a los sospechosos</h3>
+    <p class="lead">Escribe el nombre de cada jugador</p>
     <div id="inputsNombres"></div>
-    <button onclick="iniciarJuego()">Continuar 🎲</button>
+    <button class="boton" onclick="iniciarJuego()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        Continuar
+    </button>
 </div>
 
 <!-- JUEGO -->
-<div id="juego" class="card oculto">
+<div id="juego" class="card card--game oculto">
+    <p class="turno-etiqueta">Turno de</p>
     <h2 id="turno"></h2>
-    <div id="rol" class="rol">Pulsa para ver tu rol</div>
-    <button onclick="verRol()">👁 Ver rol</button>
-    <button onclick="siguiente()">➡️ Siguiente</button>
+    <div id="barraProgreso" class="barra-progreso"></div>
+
+    <div id="rolPanel" class="rol-panel">
+        <svg class="icono-espera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/>
+            <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span class="pista-espera">Pulsa "Ver rol" para consultar tu expediente</span>
+    </div>
+
+    <button id="btnVerRol" class="boton boton--fantasma" onclick="verRol()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+        </svg>
+        Ver rol
+    </button>
+    <button id="btnSiguiente" class="boton" onclick="siguiente()" disabled>
+        Siguiente jugador
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
 </div>
 
 <!-- FINAL -->
-<div id="final" class="card oculto">
-    <h3>🗣️ Empieza el debate</h3>
+<div id="final" class="card card--final oculto">
+    <h3>Comienza el debate</h3>
+    <p class="aviso-debate">Empieza hablando, sentido horario</p>
     <p id="empieza"></p>
-    <p>Sentido horario ⏰</p>
-    <button onclick="revelar()">🔍 Revelar resultado</button>
-    <button class="secondary" onclick="nuevaPartida()">🔄 Nueva partida</button>
-    <div id="resultado" class="rol oculto"></div>
+
+    <button class="boton" onclick="revelar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+        Revelar resultado
+    </button>
+    <button class="boton boton--secundario" onclick="nuevaPartida()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12a9 9 0 1 1 2.64 6.36"/><path d="M3 21v-6h6"/>
+        </svg>
+        Nueva partida
+    </button>
+
+    <div id="resultado" class="resultado-panel oculto"></div>
 </div>
 
 </div>
@@ -131,8 +707,11 @@ const categorias = {
         "Queso","Leche","Huevo","Pan","Mantequilla","Mermelada","Ensalada","Manzana","Plátano","Naranja",
         "Fresa","Sandía","Melón","Cereza","Kiwi","Mango","Uva","Piña","Limón","Chocolate",
         "Galleta","Helado","Sopa","Yogur","Cereal","Avena","Maíz","Pimiento","Zanahoria","Tomate",
-        "Patata","Cebolla","Ajo","Espinaca","Lechuga","Brócoli","Calabacín","Berenjena","Champiñón","Nuez",
-        "Almendra","Pistacho","Aceite","Vinagre","Sal","Azúcar","Miel","Coco","Palomitas"
+        "Patata","Cebolla","Ajo","Lechuga","Brócoli","Calabacín","Berenjena","Champiñón","Nuez",
+        "Almendra","Pistacho","Aceite","Vinagre","Sal","Azúcar","Miel","Coco","Palomitas",
+        "Croquetas","Tortilla de patatas","Bocadillo","Churros","Kebab","Nuggets","Lasaña","Gazpacho",
+        "Flan","Natillas","Tarta de queso","Perrito caliente","Empanada","Croissant","Donut","Magdalena",
+        "Bizcocho","Salchicha","Jamón","Gofre","Tortitas","Ketchup","Mayonesa","Mostaza","Pipas"
     ],
     "Objetos": [
         "Mesa","Silla","Teléfono","Computadora","Laptop","Teclado","Ratón","Pantalla","Reloj","Cámara",
@@ -140,53 +719,61 @@ const categorias = {
         "Calcetín","Camiseta","Pantalón","Chaqueta","Abrigo","Guantes","Bufanda","Cinturón","Lámpara","Sofá",
         "Cama","Almohada","Manta","Espejo","Puerta","Ventana","Llave","Botella","Taza","Vaso",
         "Plato","Cuchara","Tenedor","Cuchillo","Cubo","Escoba","Cepillo","Toalla","Jarrón","Maceta",
-        "Reloj de pulsera","Auriculares","Altavoz","Micrófono","Televisor","Proyector","Drone","Impresora","Router","Disco duro"
+        "Mando a distancia","Paraguas","Gafas de sol","Cargador de móvil","Peine","Cartera","Bolso",
+        "Sombrilla","Candado","Mechero","Pila","Cuerda","Grapadora","Tijeras","Regla","Vela","Percha",
+        "Termómetro","Calculadora","Balanza"
     ],
     "Deportes": [
-        "Fútbol","Baloncesto","Tenis","Golf","Natación","Atletismo","Ciclismo","Boxeo","Karate","Judo",
+        "Fútbol","Baloncesto","Tenis","Golf","Natación","Atletismo","Ciclismo","Boxeo","Karate",
         "Rugby","Béisbol","Voleibol","Hockey","Esquí","Snowboard","Surf","Patinaje","Remo","Badminton",
-        "Ping Pong","Taekwondo","Esgrima","Lucha libre","Maratón","Motociclismo","Automovilismo","Fórmula 1",
+        "Ping Pong","Taekwondo","Esgrima","Lucha libre","Maratón","Motociclismo","Fórmula 1",
         "Paracaidismo","Natación sincronizada","Salto de altura","Salto con pértiga","Lanzamiento de jabalina",
-        "Lanzamiento de disco","Lanzamiento de martillo","Carrera de relevos","Gimnasia rítmica","Kickboxing",
-        "Waterpolo","Balonmano"
+        "Lanzamiento de disco","Gimnasia rítmica","Kickboxing","Balonmano",
+        "Pádel","Yoga","Petanca","Escalada","Bolos","Billar","Dardos"
     ],
     "Colores": [
         "Rojo","Azul","Verde","Amarillo","Negro","Blanco","Naranja","Rosa","Morado","Gris",
         "Cian","Magenta","Turquesa","Lila","Beige","Marrón","Dorado","Plateado","Oliva","Celeste",
-        "Salmón","Coral","Violeta","Lavanda","Fucsia","Índigo","Carmesí","Azul Marino","Verde Lima"
+        "Violeta","Lavanda"
     ],
     "Tecnología": [
         "Teléfono","Ordenador","Laptop","Tablet","Auriculares","Altavoz","Monitor","Teclado","Ratón","Impresora",
         "Proyector","Router","Disco duro","Memoria USB","Cámara","Televisor","Smartwatch","Dron","Consola","Micrófono",
-        "Smart TV","Batería externa","Cargador","Cable USB","Adaptador","Control remoto","Webcam","Gafas VR","Cámara de seguridad","Bluetooth",
-        "Mando de consola"
+        "Cargador","Adaptador","Control remoto","Webcam","Gafas VR","Cámara de seguridad","Bluetooth","Mando de consola",
+        "Wifi","Selfie","Emoji","Contraseña","Código QR","Aplicación","Batería","Antivirus"
     ],
     "Lugares": [
         "Casa","Apartamento","Escuela","Universidad","Hospital","Clínica","Parque","Playa","Montaña","Río",
         "Lago","Ciudad","Pueblo","Cine","Teatro","Museo","Restaurante","Cafetería","Biblioteca","Iglesia",
         "Estadio","Aeropuerto","Estación de tren","Metro","Autobús","Hotel","Centro comercial","Tienda","Mercado","Zoológico",
         "Acuario","Planetario","Observatorio","Jardín botánico","Bosque","Desierto","Isla","Puerto","Faro","Cueva",
-        "Castillo","Palacio","Plaza","Fuente","Estatua","Galería de arte","Sala de conciertos","Estadio de fútbol","Pista de hielo","Piscina"
+        "Castillo","Palacio","Plaza","Fuente","Estatua","Galería de arte","Sala de conciertos","Estadio de fútbol","Pista de hielo","Piscina",
+        "Gimnasio","Supermercado","Farmacia","Peluquería","Parque de atracciones","Discoteca","Bar","Oficina",
+        "Granja","Cárcel","Comisaría","Guardería"
     ],
     "Películas y series": [
-        "Star Wars","Harry Potter","El Señor de los Anillos","Titanic","Avatar","Matrix","Juego de Tronos","Breaking Bad","Friends","The Simpsons",
-        "Stranger Things","Titanic","Jurassic Park","La Casa de Papel","Superman","Matrix","Ice Age","Madagascar","Los Increibles","El Quijote",
-        "Romeo y Julieta","Los Vengadores","Padre de Familia","Bob Esponja","Doraemon","Shin-chan","Dora la Exploradora","El mundo de Gumball","Caillou",
-        "Dragon Ball Z"
+        "Star Wars","Harry Potter","El Señor de los Anillos","Titanic","Avatar","Matrix","Juego de Tronos","Breaking Bad","The Simpsons",
+        "Stranger Things","Jurassic Park","La Casa de Papel","Superman","Ice Age","Madagascar","Los Increibles","El Quijote",
+        "Romeo y Julieta","Los Vengadores","Bob Esponja","El mundo de Gumball","Caillou",
+        "El Rey León","Toy Story","Cars","Frozen","Coco",
+        "El Padrino","Buscando a Nemo","Piratas del Caribe","Up","Los Croods","Zootrópolis",
+        "Kung Fu Panda","Ratatouille","Cómo entrenar a tu dragón","Barbie"
     ],
     "Profesiones": [
         "Médico","Enfermero","Dentista","Ingeniero","Arquitecto","Profesor","Abogado","Juez","Policía","Bombero",
         "Chef","Piloto","Azafata","Soldado","Artista","Músico","Actor","Bailarín","Cantante","Escritor",
-        "Periodista","Fotógrafo","Científico","Investigador","Programador","Diseñador","Carpintero","Fontanero","Electricista","Atleta",
-        "Futbolista","Tenista","Nadador","Corredor","Ciclista","Boxeador","Gimnasta","Golfista","Esgrimista","Veterinario",
-        "Psicólogo","Trabajador social","Recepcionista","Contador","Banquero","Ingeniero"
+        "Periodista","Fotógrafo","Científico","Investigador","Programador","Carpintero","Fontanero","Electricista","Atleta",
+        "Futbolista","Tenista","Nadador","Ciclista","Boxeador","Gimnasta","Veterinario",
+        "Psicólogo","Trabajador social","Recepcionista","Contador","Banquero","Peluquero",
+        "Camarero","Panadero","Pescadero","Cartero","Taxista","Guía turístico","Payaso","Modelo","Influencer","Vendedor"
     ],
     "Navidad": [
-        "Papa Noel","Reno","Trineo","Galleta","Árbol de Navidad","Luces navideñas","Villancico","Regalo",
+        "Papa Noel","Reno","Trineo","Galleta","Árbol de Navidad","Villancico","Regalo",
         "Muérdago","Bastón de caramelo","Campana","Estrella","Duende","Nieve","Esquí","Guantes",
-        "Bufanda","Nochebuena","Turrón","Polvorón","Gorro navideño","Copos de nieve","Belén","Linterna",
-        "Velas","Bolitas de árbol","Papel de regalo","Chimenea","Campanilla","Bola de nieve","Muñeco de nieve",
-        "Chocolate caliente","Solo en casa","El Grinch","Pesadilla antes de Navidad"
+        "Bufanda","Nochebuena","Turrón","Polvorón","Copos de nieve","Belén",
+        "Chimenea","Campanilla","Bola de nieve","Muñeco de nieve",
+        "Chocolate caliente","Solo en casa","El Grinch","Pesadilla antes de Navidad",
+        "Calcetín navideño","Postal navideña","Cascabel"
     ],
     "Cuentos famosos": [
         "Caperucita Roja","Blancanieves","La Cenicienta","Hansel y Gretel","La Bella Durmiente","El Patito Feo",
@@ -195,36 +782,165 @@ const categorias = {
         "Aladin","Alicia en el País de las Maravillas","Jack y las Habichuelas Mágicas","Pulgarcito","La Tortuga y la Liebre"
     ],
     "Personajes famosos": [
-        "Harry Potter","Goku","Pikachu","Homer Simpson","Shrek","Mickey Mouse","Pato Donald",
-        "Bugs Bunny","Batman","Capitán América","Pitufo","Sonic el erizo",
+        "Harry Potter","Homer Simpson","Shrek","Mickey Mouse","Pato Donald",
+        "Bugs Bunny","Batman","Capitán América","Pitufo",
         "Iron Man","Thor","Hulk","Spider-Man","Deadpool","Lobezno (Wolverine)","Superman",
-        "Batman","Wonder Woman","Aquaman","Flash","El Joker","Super Mario",
+        "Wonder Woman","Aquaman","Flash","El Joker","Super Mario",
         "Sherlock Holmes","James Bond","Indiana Jones","Jack Sparrow",
-        "Dora la Exploradora","Bob Esponja","Patricio Estrella","Popeye","Betty Boop"
+        "Dora la Exploradora","Bob Esponja","Patricio Estrella","Popeye",
+        "Pikachu","Goku","Winnie the Pooh","Tom y Jerry","Scooby-Doo","Pato Lucas","Los Minions",
+        "Elsa","Woody","Buzz Lightyear","Piolín"
     ],
     "Transporte": [
         "Coche","Moto","Bicicleta","Autobús","Tren","Metro","Tranvía","Avión","Barco","Helicóptero",
         "Submarino","Camión","Furgoneta","Taxi","Patinete","Lancha","Yate","Tractor",
-        "Monopatín","Canoa","Velero","Crucero","Teleférico","Bicicleta eléctrica","Trineo","Carro de caballos",
-        "Globo aerostático","Motonieve","Balsa","Coche de policía","Ambulancia","Camión de bomberos","Grúa","Caravana","Autocaravana","Camión cisterna","Coche de Fórmula 1"
+        "Monopatín","Crucero","Teleférico","Bicicleta eléctrica","Trineo","Carro de caballos",
+        "Globo aerostático","Balsa","Coche de policía","Ambulancia","Camión de bomberos","Grúa","Autocaravana","Camión cisterna","Coche de Fórmula 1",
+        "Ascensor","Cohete"
+    ],
+    "Videojuegos": [
+        "Minecraft","Fortnite","The Legend of Zelda","Super Mario Bros","Among Us","FIFA","Call of Duty",
+        "Grand Theft Auto","The Sims","Roblox","Pokémon","Animal Crossing","League of Legends","Valorant",
+        "Overwatch","Tetris","Pac-Man","Sonic","Street Fighter","Mortal Kombat","Candy Crush","Clash Royale",
+        "Brawl Stars","Fall Guys","Genshin Impact","Resident Evil"
+    ],
+    "Instrumentos musicales": [
+        "Guitarra","Piano","Batería","Violín","Flauta","Saxofón","Trompeta","Bajo","Ukelele","Arpa",
+        "Acordeón","Clarinete","Trombón","Tambor","Xilófono","Armónica","Contrabajo","Violonchelo","Castañuelas",
+        "Pandereta","Maracas","Banjo","Gaita"
+    ],
+    "Animes": [
+        "Naruto","One Piece","Dragon Ball Z","Konosuba","Death Note","Attack on Titan","My Hero Academia",
+        "Demon Slayer","Fullmetal Alchemist","Sailor Moon","Doraemon","Shin Chan","Detective Conan","Bleach",
+        "Fairy Tail","Hunter x Hunter","Jujutsu Kaisen","Tokyo Ghoul","One Punch Man","Neon Genesis Evangelion",
+        "Cowboy Bebop","Inuyasha","Card Captor Sakura","Digimon","Slam Dunk","Los Caballeros del Zodiaco",
+        "Vinland Saga","Spy x Family","Chainsaw Man","Kaguya-sama: Love is War","Violet Evergarden","Steins;Gate"
+    ],
+    "Fiestas y celebraciones": [
+        "Cumpleaños","Boda","Nochevieja","Comunión","Halloween","San Valentín","Despedida de soltero","Verbena",
+        "Feria","Carnaval","Fiesta sorpresa","Graduación","Bautizo","Aniversario","Piñata","Confeti",
+        "Globos","Tarta de cumpleaños","Regalo","Invitación","Disfraz","Baile","Karaoke","Barbacoa",
+        "Fuegos artificiales","Serpentinas","Photocall","Brindis","Velas de cumpleaños","Pastel",
+        "Fiesta de pijamas","Amigo invisible","Nochebuena","Reyes Magos","Despedida de año"
+    ],
+    "Redes sociales y apps": [
+        "Instagram","WhatsApp","TikTok","YouTube","Spotify","Netflix","Google Maps","Uber","Facebook",
+        "Twitter","Snapchat","Twitch","Gmail","Google","Amazon","Telegram","Pinterest","LinkedIn",
+        "Discord","Zoom","Duolingo","Glovo","PayPal","Bizum","Tinder","Wallapop"
+    ],
+    "Playa y verano": [
+        "Sombrilla","Toalla de playa","Protector solar","Chanclas","Bañador","Helado","Sandía","Piscina hinchable",
+        "Flotador","Gafas de bucear","Castillo de arena","Bikini","Arena","Concha marina","Snorkel","Tumbona",
+        "Sombrero de paja","Colchoneta","Ola","Tabla de surf","Bronceado","Cubo y pala","Salvavidas",
+        "Puesta de sol","Granizado","Chiringuito","Boya","Pareo","Buceo","Sandalias"
+    ],
+    "Colegio e instituto": [
+        "Recreo","Examen","Profesor","Pizarra","Deberes","Excursión","Uniforme escolar","Comedor escolar",
+        "Patio","Timbre","Notas","Suspenso","Aprobado","Tutoría","Clase de gimnasia","Selectividad",
+        "Compañero de clase","Director","Aula","Pupitre","Tiza","Rotulador","Estuche","Agenda escolar",
+        "Carpeta","Sacapuntas","Mapa","Proyecto escolar","Bata de laboratorio","Autobús escolar","Nota media"
+    ],
+    "Electrodomésticos": [
+        "Lavadora","Nevera","Microondas","Aspiradora","Cafetera","Plancha","Horno","Lavavajillas","Secadora",
+        "Tostadora","Batidora","Freidora de aire","Ventilador","Aire acondicionado","Calefactor","Robot de cocina",
+        "Exprimidor","Licuadora","Vitrocerámica","Campana extractora","Termo","Deshumidificador",
+        "Plancha de pelo","Secador de pelo","Cortacésped","Máquina de coser","Congelador","Robot aspirador"
+    ],
+    "Marcas famosas": [
+        "Coca-Cola","Pepsi","McDonald's","Burger King","Nike","Adidas","Puma","Apple","Samsung","Google",
+        "Amazon","Netflix","Zara","Mercadona","Ikea","Lego","Barbie","Pringles","Nutella","Oreo",
+        "Danone","Nesquik","Actimel","Red Bull","Fanta","Nocilla","Kellogg's","Milka","Chupa Chups","Cola Cao"
+    ],
+    "Trabajo y oficina": [
+        "Jefe","Compañero de trabajo","Reunión","Nómina","Contrato","Currículum","Entrevista de trabajo","Despacho",
+        "Fotocopiadora","Correo electrónico","Horario","Turno","Comida de empresa","Ascenso","Despido","Teletrabajo",
+        "Sindicato","Impuestos","Factura","Presupuesto","Proyecto","Plazo de entrega","Networking"
+    ],
+    "Típico de España": [
+        "Siesta","Tapas","Corrida de toros","Feria de abril","Semana Santa","Botellón","San Fermín",
+        "Las Fallas","Camino de Santiago","Guardia Civil","Selección española de fútbol","Bota de vino",
+        "Abanico","Menú del día","Fiesta del pueblo","Tortilla","Paella","Churros","Gazspacho","Flamenco"
+    ],
+    "Rutina diaria": [
+        "Despertador","Ducha","Desayuno","Café","Siesta","Pijama","Cepillo de dientes","Maquillaje","Afeitado",
+        "Peinado","Almuerzo","Cena","Merienda","Baño","Alarma","Pasear al perro",
+        "Ejercicio matutino","Meditación","Lista de tareas","Trabajo","Ropa","Cama","Bostezo",
+        "Zapatillas","Llegar tarde","Fin de semana","Vacaciones","Pijama"
     ]
 };
-
-
 
 let jugadores=[], roles=[], impostoresReales=[];
 let jugadorActual=0, categoria="", palabra="";
 let detective="", saboteador="";
+let rolVisto=false;
+
+function pintarCategorias(){
+    const cont=document.getElementById("categoriasGrid");
+    const guardadas=JSON.parse(localStorage.getItem("categoriasSeleccionadas"));
+    cont.innerHTML="";
+    Object.keys(categorias).forEach((cat)=>{
+        const marcado = guardadas ? guardadas.includes(cat) : true;
+        const label=document.createElement("label");
+        label.className="cat-item";
+        label.innerHTML=`<input type="checkbox" data-cat="${cat}" ${marcado?"checked":""}> ${cat}`;
+        cont.appendChild(label);
+    });
+}
+
+function marcarCategorias(valor){
+    document.querySelectorAll("#categoriasGrid input[type=checkbox]").forEach(cb=>cb.checked=valor);
+}
+
+function categoriasActivas(){
+    return [...document.querySelectorAll("#categoriasGrid input[type=checkbox]:checked")]
+        .map(cb=>cb.dataset.cat);
+}
+
+function mostrarAviso(msg){
+    const aviso=document.getElementById("avisoConfig");
+    aviso.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.86l-8.2 14.2A1.5 1.5 0 0 0 3.4 20.4h17.2a1.5 1.5 0 0 0 1.3-2.34l-8.2-14.2a1.5 1.5 0 0 0-2.6 0Z"/></svg><span>${msg}</span>`;
+    aviso.classList.remove("oculto");
+}
+
+function ocultarAviso(){
+    document.getElementById("avisoConfig").classList.add("oculto");
+}
 
 function crearJugadores() {
-    const num=document.getElementById("jugadores").value||4;
+    ocultarAviso();
+    const num=parseInt(document.getElementById("jugadores").value)||0;
+    const numImpostores=parseInt(document.getElementById("impostores").value)||1;
+    const detectiveOn=document.getElementById("rolDetective").checked;
+    const saboteadorOn=document.getElementById("rolSaboteador").checked;
+    const activas=categoriasActivas();
+
+    if(num<3){
+        mostrarAviso("Necesitas al menos 3 jugadores.");
+        return;
+    }
+    const rolesEspeciales=numImpostores+(detectiveOn?1:0)+(saboteadorOn?1:0);
+    if(rolesEspeciales>=num){
+        mostrarAviso("Hay demasiados roles especiales para el número de jugadores.");
+        return;
+    }
+    if((detectiveOn||saboteadorOn)&&num<8){
+        mostrarAviso("El detective y el saboteador se recomiendan con 8 jugadores o más.");
+    }
+    if(activas.length===0){
+        mostrarAviso("Selecciona al menos una categoría.");
+        return;
+    }
+    localStorage.setItem("categoriasSeleccionadas",JSON.stringify(activas));
+
     const cont=document.getElementById("inputsNombres");
     cont.innerHTML="";
     const guardados=JSON.parse(localStorage.getItem("jugadores"))||[];
     for(let i=0;i<num;i++){
         const input=document.createElement("input");
+        input.type="text";
         input.value=guardados[i]||"";
         input.placeholder="Jugador "+(i+1);
+        input.style.marginTop = i===0 ? "16px" : "10px";
         cont.appendChild(input);
     }
     document.getElementById("configuracion").classList.add("oculto");
@@ -236,95 +952,143 @@ function iniciarJuego() {
         .map((i,idx)=>i.value||"Jugador "+(idx+1));
     localStorage.setItem("jugadores",JSON.stringify(jugadores));
 
-    const keys=Object.keys(categorias);
-    categoria=keys[Math.floor(Math.random()*keys.length)];
+    const activas=categoriasActivas().length?categoriasActivas():Object.keys(categorias);
+    categoria=activas[Math.floor(Math.random()*activas.length)];
     palabra=categorias[categoria][Math.floor(Math.random()*categorias[categoria].length)];
 
-    roles = Array(jugadores.length).fill(
-    `✅ CIVIL\nPalabra: ${palabra}`
-    );
+    roles = Array(jugadores.length).fill({tipo:"civil",categoria,palabra});
     impostoresReales=[];
     detective="";
     saboteador="";
 
     let indices=[...Array(jugadores.length).keys()].sort(()=>Math.random()-0.5);
 
-    const numImpostores=document.getElementById("impostores").value;
+    const numImpostores=parseInt(document.getElementById("impostores").value)||1;
     const pista=document.getElementById("pistaImpostor").checked;
 
     for(let i=0;i<numImpostores;i++){
-        roles[indices[i]]=pista
-            ? `❌ IMPOSTOR\nCategoría: ${categoria}`
-            : "❌ IMPOSTOR";
+        roles[indices[i]]={tipo:"impostor",categoria,pista};
         impostoresReales.push(jugadores[indices[i]]);
     }
 
     let pos=numImpostores;
 
     if(document.getElementById("rolDetective").checked){
-        roles[indices[pos]]=
-        `🕵️‍♂️ DETECTIVE
-        Categoría: ${categoria}
-        Palabra: ${palabra}
-        Habilidad: Puedes obligar a una persona a revelar su rol`;
+        roles[indices[pos]]={tipo:"detective",categoria,palabra};
         detective=jugadores[indices[pos]];
         pos++;
     }
 
     if(document.getElementById("rolSaboteador").checked){
-        roles[indices[pos]]=
-            `💣 SABOTEADOR
-            Categoría: ${categoria}
-            Palabra: ${palabra}
-            Objetivo: que te voten como impostor para ganar`;
+        roles[indices[pos]]={tipo:"saboteador",categoria,palabra};
         saboteador=jugadores[indices[pos]];
     }
 
     jugadorActual=0;
     document.getElementById("nombres").classList.add("oculto");
     document.getElementById("juego").classList.remove("oculto");
+    pintarBarraProgreso();
     actualizarTurno();
 }
 
+function pintarBarraProgreso(){
+    const barra=document.getElementById("barraProgreso");
+    barra.innerHTML="";
+    jugadores.forEach(()=>{
+        const seg=document.createElement("span");
+        barra.appendChild(seg);
+    });
+}
+
+function actualizarBarraProgreso(){
+    const segs=document.querySelectorAll("#barraProgreso span");
+    segs.forEach((s,idx)=>{ s.classList.toggle("hecho", idx<jugadorActual); });
+}
+
+const iconoOjo=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const iconoMascara=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10c0-4 3-7 8-7s8 3 8 7c0 5-3 9-8 9s-8-4-8-9Z"/><path d="M8 11c1 1 2 1 4 1s3 0 4-1"/></svg>`;
+const iconoLupa=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>`;
+const iconoAlerta=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.86l-8.2 14.2A1.5 1.5 0 0 0 3.4 20.4h17.2a1.5 1.5 0 0 0 1.3-2.34l-8.2-14.2a1.5 1.5 0 0 0-2.6 0Z"/></svg>`;
+
 function actualizarTurno(){
     document.getElementById("turno").textContent=jugadores[jugadorActual];
-    document.getElementById("rol").textContent="Pulsa para ver tu rol";
+
+    const panel=document.getElementById("rolPanel");
+    panel.classList.remove("flicker");
+    panel.innerHTML=`${iconoOjo.replace('stroke-width="2"','stroke-width="1.6"').replace('<svg ','<svg class="icono-espera" ')}
+        <span class="pista-espera">Pulsa "Ver rol" para consultar tu expediente</span>`;
+
+    rolVisto=false;
+    document.getElementById("btnVerRol").disabled=false;
+    document.getElementById("btnSiguiente").disabled=true;
+    actualizarBarraProgreso();
+}
+
+function construirRol(r){
+    if(r.tipo==="civil"){
+        return `<span class="rol-etiqueta civil">${iconoMascara}CIVIL</span>
+            <div class="rol-detalle">Palabra: <b>${r.palabra}</b></div>`;
+    }
+    if(r.tipo==="impostor"){
+        return `<span class="rol-etiqueta impostor">${iconoAlerta}IMPOSTOR</span>
+            <div class="rol-detalle">${r.pista?`Categoría: <b>${r.categoria}</b>`:"Sin pistas. Improvisa."}</div>`;
+    }
+    if(r.tipo==="detective"){
+        return `<span class="rol-etiqueta detective">${iconoLupa}DETECTIVE</span>
+            <div class="rol-detalle">Categoría: <b>${r.categoria}</b>&#10;Palabra: <b>${r.palabra}</b>&#10;Puedes obligar a alguien a revelar su rol</div>`;
+    }
+    if(r.tipo==="saboteador"){
+        return `<span class="rol-etiqueta saboteador">${iconoAlerta}SABOTEADOR</span>
+            <div class="rol-detalle">Categoría: <b>${r.categoria}</b>&#10;Palabra: <b>${r.palabra}</b>&#10;Objetivo: que te voten como impostor</div>`;
+    }
 }
 
 function verRol(){
-    document.getElementById("rol").textContent=roles[jugadorActual];
+    const panel=document.getElementById("rolPanel");
+    panel.innerHTML=construirRol(roles[jugadorActual]);
+    panel.classList.remove("flicker");
+    void panel.offsetWidth;
+    panel.classList.add("flicker");
+
+    rolVisto=true;
+    document.getElementById("btnVerRol").disabled=true;
+    document.getElementById("btnSiguiente").disabled=false;
 }
 
 function siguiente(){
+    if(!rolVisto) return;
     jugadorActual++;
     if(jugadorActual>=jugadores.length){
         document.getElementById("juego").classList.add("oculto");
         document.getElementById("final").classList.remove("oculto");
         document.getElementById("empieza").textContent=
-            "Empieza hablando: "+jugadores[Math.floor(Math.random()*jugadores.length)];
+            jugadores[Math.floor(Math.random()*jugadores.length)];
     } else actualizarTurno();
 }
 
 function revelar(){
     const r=document.getElementById("resultado");
-    r.classList.remove("oculto");
-    r.textContent=
-`🕵️ Impostor(es): ${impostoresReales.join(", ")}
-🕵️‍♂️ Detective: ${detective||"Ninguno"}
-💣 Saboteador: ${saboteador||"Ninguno"}
-📚 Categoría: ${categoria}
-🧠 Palabra: ${palabra}`;
+    r.classList.remove("oculto","revelado");
+    void r.offsetWidth;
+    r.classList.add("revelado");
+    r.innerHTML=`
+        <div class="resultado-linea"><span class="etiqueta">Impostor(es)</span><span class="valor">${impostoresReales.join(", ")}</span></div>
+        <div class="resultado-linea"><span class="etiqueta">Detective</span><span class="valor">${detective||"Ninguno"}</span></div>
+        <div class="resultado-linea"><span class="etiqueta">Saboteador</span><span class="valor">${saboteador||"Ninguno"}</span></div>
+        <div class="resultado-linea"><span class="etiqueta">Categoría</span><span class="valor">${categoria}</span></div>
+        <div class="resultado-linea"><span class="etiqueta">Palabra</span><span class="valor">${palabra}</span></div>
+    `;
 }
 
 function nuevaPartida(){
     document.getElementById("final").classList.add("oculto");
     document.getElementById("resultado").classList.add("oculto");
     document.getElementById("configuracion").classList.remove("oculto");
+    ocultarAviso();
 }
+
+pintarCategorias();
 </script>
 
 </body>
 </html>
-
-
-
